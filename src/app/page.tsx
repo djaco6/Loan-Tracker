@@ -1,103 +1,168 @@
-import Image from "next/image";
+"use client"
+
+import LoanForm from "./LoanForm";
+import { supabase } from "../../lib/supabaseClient";
+import { useState, useEffect } from "react";
+import InterestRateBarChart from "../components/InterestRateBarChart";
+import Auth from "../components/Auth";
+import type { User } from '@supabase/supabase-js'; // Add this import
+
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    };
+    getUser();
+  }, []);
+
+  const [loans, setLoans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const [userMode, setUserMode] = useState<'admin' | 'customer'>('customer');
+
+  // Fetch loans from Supabase
+  const fetchLoans = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("loans").select("*");
+    if (!error && data) setLoans(data);
+    if (error) console.error(error);
+    setLoading(false);
+  };
+
+  // Delete loan by id
+  const handleDelete = async (id: number) => {
+    setDeleting(true);
+    const { error } = await supabase.from("loans").delete().eq("id", id);
+    if (!error) {
+      // Refresh the loans list
+      fetchLoans();
+    }
+    setDeleting(false);
+  };
+
+  useEffect(() => {
+    fetchLoans();
+  }, []);
+
+  return (
+  <>
+    { user == null && (
+    <div className="min-h-screen bg-blue-900 p-6 space-y-8">
+      <Auth />
     </div>
+    )
+    }
+    { user != null && (
+    <div className="min-h-screen bg-blue-900 p-6 space-y-8">
+      <div className = "absolute top-4 right-4 flex flex-col items-end z-10">
+      {/* Sign out button */}
+        <div className="flex items-center bg-blue-800 text-white px-4 py-2 rounded shadow mr-4">
+          <span className="mr-3 font-semibold">{user?.email}</span>
+          <button
+            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              setUser(null);
+            }}
+          >
+            Sign Out
+          </button>
+        </div>
+        {/* User mode dropdown */}
+        <div className="flex justify-end mr-4">
+          <label className="text-white mr-2 font-semibold">User Mode:</label>
+          <select
+            value={userMode}
+            onChange={e => setUserMode(e.target.value as 'admin' | 'customer')}
+            className="p-2 rounded bg-blue-800 text-white border border-blue-700"
+          >
+            <option value="customer">Customer</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      {/* Memphis Tigers Logo */}
+      <div className="absolute top-6 left-6">
+        <img
+          src="../../../skylineFinal.png"
+          alt="Skyline"
+          className="h-20 w-40"
+        />
+      </div>
+
+      {/* Overview Section */}
+      <section className="bg-blue-800 text-white p-6 rounded shadow mt-20">
+        <h1 className="text-3xl font-bold mb-4">Loan Overview</h1>
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-blue-700 p-4 rounded">
+              <h2 className="font-semibold">Total Loans</h2>
+              <p className="text-xl">{loans.length}</p>
+            </div>
+            <div className="bg-blue-700 p-4 rounded">
+              <h2 className="font-semibold">Active Loans</h2>
+              <p className="text-xl">{loans.filter(l => l.status === "active").length}</p>
+            </div>
+            <div className="bg-blue-700 p-4 rounded">
+              <h2 className="font-semibold">Paid Loans</h2>
+              <p className="text-xl">{loans.filter(l => l.status === "paid").length}</p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Interest Rate Frequency Bar Chart */}
+      <section>
+        <InterestRateBarChart loans={loans} />
+      </section>
+
+      {/* Add Loan Form -- admin only*/}
+      {userMode === 'admin' && (
+      <section>
+        <LoanForm />
+      </section>
+      )}
+
+      {/* Optional: List all loans */}
+      <section className="bg-blue-950 text-white p-6 rounded shadow">
+        <h2 className="text-2xl font-bold mb-4">All Loans</h2>
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <ul className="space-y-2">
+            {loans.map((loan) => (
+              <li key={loan.id} className="p-2 bg-blue-800 rounded flex items-center justify-between">
+                <span>
+                  {loan.name} - ${loan.amount} at {loan.interest}% ({loan.status})
+                </span>
+                {userMode === 'admin' && (
+                  <button
+                    onClick={() => handleDelete(loan.id)}
+                    className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded transition disabled:opacity-50"
+                    disabled={deleting}
+                  >
+                    {deleting ? "Deleting..." : "Delete"}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+    )
+    }
+  </>
   );
 }
