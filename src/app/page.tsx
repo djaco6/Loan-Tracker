@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import InterestRateBarChart from "../components/InterestRateBarChart";
 import Auth from "../components/Auth";
 import type { User } from '@supabase/supabase-js'; // Add this import
+import type { Loan } from "../../lib/types"; // Import the loan type
 
 
 export default function Home() {
@@ -24,7 +25,7 @@ export default function Home() {
     getUser();
   }, []);
 
-  const [loans, setLoans] = useState<any[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [userMode, setUserMode] = useState<'admin' | 'customer'>('customer');
