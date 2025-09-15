@@ -34,9 +34,9 @@ function getInterestRateFrequencies(loans: Loan[]) {
 
 export default function InterestRateBarChart({ loans }: { loans: Loan[] }) {
   return (
-    <section className="bg-white p-6 rounded shadow">
-      <h2 className="text-2xl font-bold mb-4 text-blue-900">Interest Rate Distribution</h2>
-      <Bar
+    <section className="bg-slate-700 p-6 rounded text-white shadow">
+      <h2 className="text-2xl font-bold mb-4 text-white">Interest Rate Distribution</h2>
+      <Bar className = "text-white"
         data={getInterestRateFrequencies(loans)}
         options={{
           responsive: true,
@@ -45,8 +45,8 @@ export default function InterestRateBarChart({ loans }: { loans: Loan[] }) {
             title: { display: false },
           },
           scales: {
-            x: { title: { display: true, text: "Interest Rate Range" } },
-            y: { title: { display: true, text: "Number of Loans" }, beginAtZero: true },
+            x: { title: { display: true, text: "Interest Rate Range", color: "white" } },
+            y: { title: { display: true, text: "Number of Loans", color: "white" }, beginAtZero: true },
           },
         }}
       />

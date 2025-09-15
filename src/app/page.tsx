@@ -12,14 +12,18 @@ import type { Loan } from "../../lib/types"; // Import the loan type
 export default function Home() {
 
   const [user, setUser] = useState<User | null>(null);
+  const [loadingUser, setLoadingUser] = useState(true);
 
   useEffect(() => {
     const getUser = async () => {
+      setLoadingUser(true);
       const { data } = await supabase.auth.getUser();
       if (data.user) {
         setUser(data.user);
+        setLoadingUser(false);
       } else {
         setUser(null);
+        setLoadingUser(false);
       }
     };
     getUser();
@@ -54,22 +58,26 @@ export default function Home() {
     fetchLoans();
   }, []);
 
+  if (loadingUser) {
+    return <div className="flex items-center justify-center min-h-screen bg-slate-800">Loading...</div>;
+  }
+
   return (
   <>
     { user == null && (
-    <div className="min-h-screen bg-blue-900 p-6 space-y-8">
+    <div className="relative w-full h-screen bg-slate-800">
       <Auth />
     </div>
     )
     }
     { user != null && (
-    <div className="min-h-screen bg-blue-900 p-6 space-y-8">
+    <div className="min-h-screen bg-slate-800 p-6 space-y-8">
       <div className = "absolute top-4 right-4 flex flex-col items-end z-10">
       {/* Sign out button */}
-        <div className="flex items-center bg-blue-800 text-white px-4 py-2 rounded shadow mr-4">
+        <div className="flex items-center bg-slate-700 text-white px-4 py-2 rounded shadow mr-4">
           <span className="mr-3 font-semibold">{user?.email}</span>
           <button
-            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition"
+            className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded transition"
             onClick={async () => {
               await supabase.auth.signOut();
               setUser(null);
@@ -80,42 +88,41 @@ export default function Home() {
         </div>
         {/* User mode dropdown */}
         <div className="flex justify-end mr-4">
-          <label className="text-white mr-2 font-semibold">User Mode:</label>
+          <label className="bg-slate-700 text-white mr-2 font-semibold">User Mode:</label>
           <select
             value={userMode}
             onChange={e => setUserMode(e.target.value as 'admin' | 'customer')}
-            className="p-2 rounded bg-blue-800 text-white border border-blue-700"
+            className="p-2 rounded bg-blue-700 text-white hover:bg-blue-800 transition"
           >
             <option value="customer">Customer</option>
             <option value="admin">Admin</option>
           </select>
         </div>
       </div>
-      {/* Memphis Tigers Logo */}
+      {/* Skyline Image*/}
       <div className="absolute top-6 left-6">
         <img
-          src="../../../skylineFinal.png"
+          src="../../../skylineNew.png"
           alt="Skyline"
-          className="h-20 w-40"
+          className="h-30 w-50"
         />
       </div>
 
       {/* Overview Section */}
-      <section className="bg-blue-800 text-white p-6 rounded shadow mt-20">
-        <h1 className="text-3xl font-bold mb-4">Loan Overview</h1>
+      <section className="text-white p-6 rounded mt-20">
         {loading ? (
           <p>Loading...</p>
         ) : (
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-blue-700 p-4 rounded">
+            <div className="bg-slate-700 p-4 rounded">
               <h2 className="font-semibold">Total Loans</h2>
               <p className="text-xl">{loans.length}</p>
             </div>
-            <div className="bg-blue-700 p-4 rounded">
+            <div className="bg-slate-700 p-4 rounded">
               <h2 className="font-semibold">Active Loans</h2>
               <p className="text-xl">{loans.filter(l => l.status === "active").length}</p>
             </div>
-            <div className="bg-blue-700 p-4 rounded">
+            <div className="bg-slate-700 p-4 rounded">
               <h2 className="font-semibold">Paid Loans</h2>
               <p className="text-xl">{loans.filter(l => l.status === "paid").length}</p>
             </div>
@@ -136,7 +143,7 @@ export default function Home() {
       )}
 
       {/* Optional: List all loans */}
-      <section className="bg-blue-950 text-white p-6 rounded shadow">
+      <section className="bg-slate-700 text-white p-6 rounded shadow">
         <h2 className="text-2xl font-bold mb-4">All Loans</h2>
         {loading ? (
           <p>Loading...</p>
